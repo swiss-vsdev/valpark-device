@@ -1,5 +1,6 @@
 """Checks minimaux : machine d'états, file persistante, parseur GNSS, rendu."""
 import io
+import os
 import sys
 import tempfile
 import unittest
@@ -11,6 +12,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from valpark.config import Config
 from valpark.detector import Detector
 from valpark.display import Display
+from valpark.main import read_token
 from valpark.queue import EventQueue
 from valpark.sensors import Sample, parse_cgpsinfo
 
@@ -44,6 +46,25 @@ class QueueTest(unittest.TestCase):
             self.assertEqual(queue.size(), 0)
             third = queue.add("DEPARTED")
             self.assertEqual(third["seq"], 3)
+
+
+class TokenTest(unittest.TestCase):
+    def test_missing_or_placeholder_exits_78(self):
+        cfg = Config(server_base="http://host:4321", token_path="/nonexistent/token")
+        with self.assertRaises(SystemExit) as missing:
+            read_token(cfg)
+        self.assertEqual(missing.exception.code, os.EX_CONFIG)
+
+        with tempfile.TemporaryDirectory() as tmp:
+            token = Path(tmp) / "device.token"
+            token.write_text("secret")
+            cfg = Config(server_base="http://<SERVER_LAN_IP>:4321", token_path=token)
+            with self.assertRaises(SystemExit) as placeholder:
+                read_token(cfg)
+            self.assertEqual(placeholder.exception.code, os.EX_CONFIG)
+
+            cfg = Config(server_base="http://host:4321", token_path=token)
+            self.assertEqual(read_token(cfg), "secret")
 
 
 class GnssTest(unittest.TestCase):

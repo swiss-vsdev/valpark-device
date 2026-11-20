@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+import os
 import time
 from pathlib import Path
 
@@ -45,12 +46,25 @@ def flush(queue: EventQueue, api: ApiClient, display: Display) -> None:
     apply_state(display, result)
 
 
-def run(cfg: Config) -> None:
-    token = Path(cfg.token_path).read_text().strip()
+def read_token(cfg: Config) -> str:
+    """Configuration incomplète → sortie 78 : systemd ne redémarre pas (voir unité)."""
+    path = Path(cfg.token_path)
+    try:
+        token = path.read_text().strip()
+    except OSError as exc:
+        log.error("jeton introuvable : %s (%s)", path, exc)
+        raise SystemExit(os.EX_CONFIG) from exc
     if not token:
-        raise SystemExit("jeton vide : écrire le jeton dans " + str(cfg.token_path))
+        log.error("jeton vide : l'écrire dans %s", path)
+        raise SystemExit(os.EX_CONFIG)
+    if "<SERVER_LAN_IP>" in cfg.server_base:
+        log.error("server.base n'est pas configuré dans %s", os.environ.get("VALPARK_CONFIG", "/etc/valpark/config.toml"))
+        raise SystemExit(os.EX_CONFIG)
+    return token
 
-    api = ApiClient(cfg.server_base, token)
+
+def run(cfg: Config) -> None:
+    api = ApiClient(cfg.server_base, read_token(cfg))
     queue = EventQueue(cfg.db_path)
     display = Display(cfg)
     gnss, accel = make_sensors(cfg)
