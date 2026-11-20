@@ -1,0 +1,16 @@
+[Unit]
+Description=ValPark device client
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=valpark
+WorkingDirectory=/opt/valpark
+Environment=VALPARK_CONFIG=/etc/valpark/config.toml
+ExecStart=/opt/valpark/.venv/bin/python -u -m valpark.main
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

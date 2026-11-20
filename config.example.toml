@@ -1,0 +1,27 @@
+# Copier vers /etc/valpark/config.toml puis ajuster.
+# Aucun secret ici : le jeton vit dans /etc/valpark/device.token.
+
+[server]
+base = "http://<SERVER_LAN_IP>:4321"
+token_path = "/etc/valpark/device.token"
+
+[hardware]
+# true = pas de module branché : capteurs simulés, e-paper affiché dans la console.
+mock = true
+gnss_port = "/dev/ttyUSB2"
+i2c_bus = 1
+mpu_address = 104          # 0x68
+epd_model = "epd_2in9_V2"  # selon l'étiquette V1/V2/V3 au dos du panneau
+vendor_dir = "/opt/valpark/vendor/e-Paper/RaspberryPi_JetsonNano/python/lib"
+
+[detection]
+sample_interval_s = 60
+calm_samples = 2
+calm_speed_kmh = 2.0
+calm_accel_mg = 100
+moving_speed_kmh = 10.0
+moving_accel_mg = 300
+heartbeat_s = 300
+
+[paths]
+db = "/var/lib/valpark/events.sqlite3"
