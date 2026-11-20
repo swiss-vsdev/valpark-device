@@ -21,6 +21,8 @@ done
 if [ -f "$CMDLINE" ]; then
     sudo sed -i 's/modules-load=dwc2,g_ether//g' "$CMDLINE"
 fi
+# i2c-dev expose /dev/i2c-1 en espace utilisateur (nécessaire à smbus2)
+grep -qxF 'i2c-dev' /etc/modules || echo 'i2c-dev' | sudo tee -a /etc/modules >/dev/null
 
 echo "=== utilisateur et répertoires ==="
 id -u valpark >/dev/null 2>&1 || sudo useradd --system --no-create-home --shell /usr/sbin/nologin valpark
