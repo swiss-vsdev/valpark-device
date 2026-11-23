@@ -91,10 +91,15 @@ class Accel:
         self.bus.write_byte_data(self.address, 0x6B, 0x00)
 
     def read_delta_mg(self) -> float:
-        data = self.bus.read_i2c_block_data(self.address, 0x3B, 6)
-        axes = [int.from_bytes(data[i : i + 2], "big", signed=True) for i in (0, 2, 4)]
-        magnitude_g = math.sqrt(sum(axis * axis for axis in axes)) / 16384.0
-        return abs(magnitude_g - 1.0) * 1000
+        """Pic sur ~0,5 s : une secousse brève doit être vue par l'échantillonnage minute."""
+        best = 0.0
+        for _ in range(10):
+            data = self.bus.read_i2c_block_data(self.address, 0x3B, 6)
+            axes = [int.from_bytes(data[i : i + 2], "big", signed=True) for i in (0, 2, 4)]
+            magnitude_g = math.sqrt(sum(axis * axis for axis in axes)) / 16384.0
+            best = max(best, abs(magnitude_g - 1.0) * 1000)
+            time.sleep(0.05)
+        return best
 
 
 class MockAccel:
