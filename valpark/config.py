@@ -15,7 +15,18 @@ class Config:
     token_path: Path = Path("/etc/valpark/device.token")
     db_path: Path = Path("/var/lib/valpark/events.sqlite3")
 
-    mock: bool = True  # ponytail: force true until modules are wired
+    mock: bool = True  # legacy: used as fallback for both flags below
+    mock_sensors: bool | None = None
+    mock_display: bool | None = None
+
+    @property
+    def sensors_mocked(self) -> bool:
+        return self.mock if self.mock_sensors is None else self.mock_sensors
+
+    @property
+    def display_mocked(self) -> bool:
+        return self.mock if self.mock_display is None else self.mock_display
+
     gnss_port: str = "/dev/ttyUSB2"
     i2c_bus: int = 1
     mpu_address: int = 0x68
@@ -47,6 +58,9 @@ class Config:
         cfg.server_base = server.get("base", cfg.server_base)
         cfg.token_path = Path(server.get("token_path", cfg.token_path))
         cfg.mock = bool(hw.get("mock", cfg.mock))
+        for key in ("mock_sensors", "mock_display"):
+            if key in hw:
+                setattr(cfg, key, bool(hw[key]))
         cfg.gnss_port = hw.get("gnss_port", cfg.gnss_port)
         cfg.i2c_bus = int(hw.get("i2c_bus", cfg.i2c_bus))
         mpu_address = hw.get("mpu_address", cfg.mpu_address)

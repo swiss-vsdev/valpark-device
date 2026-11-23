@@ -7,7 +7,10 @@ token_path = "/etc/valpark/device.token"
 
 [hardware]
 # true = pas de module branché : capteurs simulés, e-paper affiché dans la console.
+# Les deux drapeaux peuvent être séparés (ex. capteurs réels + e-paper absent).
 mock = true
+mock_sensors = true
+mock_display = true
 gnss_port = "/dev/ttyUSB2"
 i2c_bus = 1
 mpu_address = 104          # 0x68

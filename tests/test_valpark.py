@@ -48,6 +48,13 @@ class QueueTest(unittest.TestCase):
             self.assertEqual(third["seq"], 3)
 
 
+class ConfigTest(unittest.TestCase):
+    def test_mock_flags_are_independent(self):
+        cfg = Config(mock=True, mock_sensors=False)
+        self.assertFalse(cfg.sensors_mocked)
+        self.assertTrue(cfg.display_mocked)
+
+
 class TokenTest(unittest.TestCase):
     def test_missing_or_placeholder_exits_78(self):
         cfg = Config(server_base="http://host:4321", token_path="/nonexistent/token")

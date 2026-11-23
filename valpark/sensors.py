@@ -1,6 +1,7 @@
 """Lectures GNSS (SIM7600 via AT) et accéléromètre (MPU-6050 via I²C)."""
 from __future__ import annotations
 
+import logging
 import math
 import time
 from dataclasses import dataclass
@@ -8,6 +9,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from .config import Config
+
+log = logging.getLogger("valpark")
 
 
 @dataclass
@@ -84,6 +87,8 @@ class Accel:
 
         self.bus = SMBus(bus)
         self.address = address
+        # Le MPU-6050 sort de veille avec le bit 6 de PWR_MGMT_1 posé : le réveiller.
+        self.bus.write_byte_data(self.address, 0x6B, 0x00)
 
     def read_delta_mg(self) -> float:
         data = self.bus.read_i2c_block_data(self.address, 0x3B, 6)
@@ -97,10 +102,27 @@ class MockAccel:
         return 0.0
 
 
+class NoGnss:
+    """Pas de fix : le serveur datera l'événement à la réception."""
+
+    def read(self) -> Sample | None:
+        return None
+
+
 def make_sensors(cfg: Config):
-    if cfg.mock:
+    if cfg.sensors_mocked:
         return MockGnss(), MockAccel()
-    return Gnss(cfg.gnss_port), Accel(cfg.i2c_bus, cfg.mpu_address)
+    try:
+        gnss = Gnss(cfg.gnss_port)
+    except Exception as exc:
+        log.warning("GNSS indisponible (%s) : événements sans position", exc)
+        gnss = NoGnss()
+    try:
+        accel = Accel(cfg.i2c_bus, cfg.mpu_address)
+    except Exception as exc:
+        log.warning("accéléromètre indisponible (%s)", exc)
+        accel = MockAccel()
+    return gnss, accel
 
 
 def cpu_temperature() -> float | None:

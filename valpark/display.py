@@ -20,7 +20,7 @@ class Display:
         self.cfg = cfg
         self.last_version: str | None = None
         self.epd = None
-        if not cfg.mock:
+        if not cfg.display_mocked:
             sys.path.insert(0, str(cfg.vendor_dir))
             module = importlib.import_module(f"waveshare_epd.{cfg.epd_model}")
             self.epd = module.EPD()
@@ -35,7 +35,7 @@ class Display:
 
         lines = [str(display.get(key, ""))[:22] for key in ("line1", "line2", "line3")]
         icon = ICON_GLYPH.get(display.get("icon", "idle"), " ")
-        if self.cfg.mock:
+        if self.cfg.display_mocked:
             frame = "█" if display.get("inverted") else "│"
             print(f"  ┌──────────────────────┐ {icon} v={version}")
             for line in lines:
