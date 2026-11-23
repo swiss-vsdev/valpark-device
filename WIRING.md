@@ -14,12 +14,17 @@ avant la première mise sous tension.
 
 ```
 Batterie 20 000 mAh
- ├── USB-A #1 ──> Pi PWR (micro-USB alimentation)
- └── USB-A #2 ──> HAT SIM7600 (port micro-USB "USB")
+ └── USB-A #1 ──> Pi PWR (micro-USB alimentation)
 
-Pi USB (OTG, micro-USB) ──adaptateur OTG micro-A/USB-A──> câble USB-A→micro-B ──> HAT port "USB"
+Pi USB (OTG, micro-USB) ──adaptateur OTG micro-A/USB-A──> câble USB-A→micro-B ──> HAT micro-USB (entrée données + alimentation)
 Pi GPIO (header 40 broches) ──> e-paper (SPI) + MPU-6050 (I²C)
 ```
+
+**Le micro-USB du HAT est l'entrée unique** (données + 5 V). Les deux ports USB-A du
+HAT sont des ports **aval** du hub (clavier, souris…) : ne pas les brancher au Pi.
+Le HAT est donc alimenté par le VBUS du port USB du Pi pendant le test. Si le modem
+coupe sous les pointes de 2 A, injecter 5 V séparément sur les pastilles pogo `5V`/`GND`
+du HAT et couper le fil VBUS (rouge) du câble de données.
 
 **Le HAT n'est pas monté sur le Pi.** Ses pogo pins tombent sur les contacts **USB** du
 Zero ; monté dessus, il recouvre le header GPIO dont ont besoin l'e-paper et le MPU-6050.
@@ -63,8 +68,8 @@ Activation : `dtparam=i2c_arm=on`. Vérification : `i2cdetect -y 1` doit affiche
 
 | Élément | Détail |
 |---|---|
-| Données | Port **USB** (OTG) du Pi → adaptateur OTG micro-A/USB-A → câble USB-A→micro-B fourni → port **USB** du HAT |
-| Alimentation | USB-A #2 de la batterie → port **USB** du HAT (séparé du PWR du Pi) |
+| Données | Port **USB** (OTG) du Pi → adaptateur OTG micro-A/USB-A → câble USB-A→micro-B fourni → **micro-USB** du HAT (seule entrée) |
+| Alimentation | Le HAT tire son 5 V du VBUS du port USB du Pi via ce même câble. Ne pas brancher les ports USB-A du HAT au Pi. |
 | Pogo pins | **Non utilisés** — ne pas poser le HAT sur le Pi |
 | Antennes | LTE → `MAIN` (IPEX) ; GNSS → `GNSS` (IPEX) ; `AUX` optionnelle |
 | SIM | SIM Sunrise active dans le slot (vérifier le format du slot à réception — le FAQ Waveshare indique SIM standard) |
